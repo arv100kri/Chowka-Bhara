@@ -30,6 +30,9 @@ class Pawn(object):
         self.__cumulativeDiceValue = 0
         self.__isActive = isActive
     
+    def __eq__(self, other):
+        return self.getName() == other.getName()
+    
     def setName(self, name):
         self.name = name
     

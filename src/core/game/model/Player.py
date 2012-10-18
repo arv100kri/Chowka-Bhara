@@ -43,13 +43,16 @@ class Player(object):
         print "Number of pawns are: ", len(self.__pawnLists)
         for i in range(0,len(self.__pawnLists)):
             pawn = self.__pawnLists[i]
-            print "Details of the pawn "+ str(pawn.getName()) + "\n Initial Position: "+ str(pawn.getPosition()) + "\n Cumulative Dice Value: " + str(pawn.getCumulativeDiceValue())            
+            print "Details of the pawn "+ str(pawn.getName()) + "\n Current Position: "+ str(pawn.getPosition()) + "\n Cumulative Dice Value: " + str(pawn.getCumulativeDiceValue())            
     
     def getPlayerName(self):
         return self.__playerName
 
     def getPawnList(self):
         return self.__pawnLists
+    
+    def setPawnList(self, pawnList):
+        self.__pawnLists = pawnList
     
     def getPathArray(self):
         return self.__pathArray

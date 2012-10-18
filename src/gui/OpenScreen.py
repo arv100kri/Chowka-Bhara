@@ -14,12 +14,19 @@ class Base:
         print "you have closed the window"
         gtk.main_quit() 
         
-    def comboText(self,widget):
+    def setPlayerA(self,widget):
         print widget.get_active_text()
-        if (widget.get_active_text()=="computer"):
-            return 1
-        else:
-            return 0
+        self.playerA = widget.get_active_text()
+        
+    def setPlayerB(self,widget):
+        print widget.get_active_text()
+        self.playerB = widget.get_active_text()
+        
+    def getPlayerA (self):
+        return self.playerA
+    
+    def getPlayerB(self):
+        return self.playerB      
      
     def textChange(self,widget):
         print widget.get_text()
@@ -27,44 +34,53 @@ class Base:
     
     def openGame(self,widget):
         game = GameScreen()
-        game.start()
+        print self.getPlayerA()
+        print self.getPlayerB()
+        game.start(self.getPlayerA(),self.getPlayerB())
         #gtk.main_quit()
             
     def __init__(self):
+        self.playerA = "RandomAgent"
+        self.playerB = "RandomAgent"
+        
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_size_request(200,150)
         self.window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
         self.window.set_title("Chowka-Bhara")
         self.window.set_tooltip_text("Game of dice!")
         
-        self.button1 = gtk.Button("EXIT")
-        self.button1.connect("clicked",self.destroy)
-        self.button1.set_tooltip_text("Click to exit")
+        self.buttonExit = gtk.Button("EXIT")
+        self.buttonExit.connect("clicked",self.destroy)
+        self.buttonExit.set_tooltip_text("Click to exit")
         
-        self.button2 = gtk.Button("Play")
-        self.button2.connect("clicked",self.openGame)
-        self.button2.set_tooltip_text("Click to start game")
+        self.buttonPlay = gtk.Button("Play")
+        self.buttonPlay.connect("clicked",self.openGame)
+        self.buttonPlay.set_tooltip_text("Click to start game")
                 
-        self.label1 = gtk.Label("Choose player type")
-        self.combo = gtk.combo_box_entry_new_text()
-        self.combo.connect("changed", self.comboText)
-        self.combo.append_text("Human")
-        self.combo.append_text("Computer")
+        self.labelPlayerA = gtk.Label("Choose Player A")
+        self.comboPlayerA = gtk.combo_box_entry_new_text()
+        self.comboPlayerA.connect("changed", self.setPlayerA)
+        self.comboPlayerA.append_text("NaiveAgent")
+        self.comboPlayerA.append_text("RandomAgent")
+        self.comboPlayerA.append_text("IntelligentAgent")
         
-        self.label2 = gtk.Label("Enter the name of the player")
-        self.textbox1 = gtk.Entry()
-        self.textbox1.connect("changed", self.textChange)
+        self.labelPlayerB = gtk.Label("Choose Player B")
+        self.comboPlayerB = gtk.combo_box_entry_new_text()
+        self.comboPlayerB.connect("changed", self.setPlayerB)
+        self.comboPlayerB.append_text("NaiveAgent")
+        self.comboPlayerB.append_text("RandomAgent")
+        self.comboPlayerB.append_text("IntelligentAgent")
        
         #Packing to the box containers
         self.box2 = gtk.HBox()
-        self.box2.pack_start(self.button1,False,False,25)
-        self.box2.pack_start(self.button2,False,False,50)
+        self.box2.pack_start(self.buttonExit,False,False,25)
+        self.box2.pack_start(self.buttonPlay,False,False,50)
         
         self.box1 = gtk.VBox()
-        self.box1.pack_start(self.label1,False)
-        self.box1.pack_start(self.combo,False)
-        self.box1.pack_start(self.label2,False)
-        self.box1.pack_start(self.textbox1,False)
+        self.box1.pack_start(self.labelPlayerA,False)
+        self.box1.pack_start(self.comboPlayerA,False)
+        self.box1.pack_start(self.labelPlayerB,False)
+        self.box1.pack_start(self.comboPlayerB,False)
         self.box1.pack_start(self.box2,False)
                
         self.window.add(self.box1)

@@ -9,8 +9,13 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 
+from core.game.model.Player import Player
+#from core.game.model.Board import Board
+from core.game.model.Board2 import Board
+from core.game.timing import * 
+
 class GameScreen(gtk.Window):
-    
+
     def destroy(self, widget, data = None):
         print "you have closed the game window"
         gtk.main_quit() 
@@ -21,8 +26,9 @@ class GameScreen(gtk.Window):
     
     def computerPlayerMove(self, pawnName, pawnId, currentPos, newPos):
         #pass tuples for the currentPos and newPos
-        currentIndex = currentPos[0] + 5*currentPos[1]
-        newIndex = newPos[0] + 5*newPos[1]
+        currentIndex = 5*currentPos[0] + currentPos[1]
+        newIndex = 5*newPos[0] + newPos[1]
+        print "current pos =", currentPos, "index +", currentIndex
         if pawnName == "blue":
             self.pawnHbox[currentIndex].remove(self.pawnblueButton[pawnId])
             self.pawnHbox[newIndex].pack_start(self.pawnblueButton[pawnId], False)
@@ -40,8 +46,20 @@ class GameScreen(gtk.Window):
     
     def addImage(self, widget, img):
         widget.add(img)
+    
+    def start(self, playA, playB):
+        self.setDice = 1
+        pathArrayA=[(0,2),(0,1),(0,0),(1,0),(2,0),(3,0),(4,0),(4,1),(4,2),(4,3),(4,4),(3,4),(2,4),(1,4),(0,4),(0,3),(1,3),(2,3),(3,3),(3,2),(3,1),(2,1),(1,1),(1,2),(2,2)]
+        pathArrayB=[(4,2),(4,3),(4,4),(3,4),(2,4),(1,4),(0,4),(0,3),(0,2),(0,1),(0,0),(1,0),(2,0),(3,0),(4,0),(4,1),(3,1),(2,1),(1,1),(1,2),(1,3),(2,3),(3,3),(3,2),(2,2)]
+        self.playerA = Player(playA, pathArrayA, 4, True)
+        self.playerB = Player(playB, pathArrayB, 4, False)
+        self.gameBoard = Board([self.playerA, self.playerB], 5)
+        self.winner =""
+        print "Initial State \n"
+        self.playerA.printValue()
+        self.playerB.printValue()
+        print "*************************************************"
         
-    def start(self):
         self.gamewindow = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.gamewindow.set_size_request(380,440)
         self.gamewindow.set_position(gtk.WIN_POS_CENTER_ALWAYS)
@@ -111,33 +129,21 @@ class GameScreen(gtk.Window):
             self.pawnredButton[i].connect("clicked",self.changePawnPosition,"red",i)
             self.pawnHbox[22].pack_start(self.pawnredButton[i],False)
 
-        '''
-        #Testing square. To comment out later
-        self.button1 = gtk.Button()
-        self.image1=gtk.image_new_from_pixbuf(self.pix_pawnblue)
-        self.button1.add(self.image1)
-        self.button1.connect("clicked",self.changePawnPosition)
-        self.button1.set_tooltip_text("pawn button is here")
-        self.pawnHbox[0].pack_start(self.button1, False)
-        self.button2 = gtk.Button()
-        self.image2=gtk.image_new_from_pixbuf(self.pix_pawnblue)
-        self.button2.add(self.image1)
-        self.button2.connect("clicked",self.changePawnPosition)
-        self.button2.set_tooltip_text("pawn button is here")
-        self.pawnHbox[0].pack_start(self.button2, False)
-        '''
-        
+        self.labelDice = gtk.Label("")
         
         self.statusTextBox = gtk.Entry()
-        self.statusTextBox.set_text("Player 1's turn, roll dice")
+        self.statusTextBox.set_text("Turn of "+self.gameBoard.getCurrentPlayer().getPlayerName()+" Roll dice")
         
-        self.buttonDice = gtk.Button("Roll Dice")
-        #Insert the randomly generated dice value here
-        self.labelDice = gtk.Label("5")
+        self.buttonMakeMove = gtk.Button("Make Move")
+        self.buttonMakeMove.connect("clicked",self.makeNextMove)
+        
+        self.buttonRollDice = gtk.Button("Roll Dice")
+        self.buttonRollDice.connect("clicked",self.rollDice)
         
         self.box2 = gtk.HBox()
-        self.box2.pack_start(self.buttonDice)
+        self.box2.pack_start(self.buttonRollDice)
         self.box2.pack_start(self.labelDice)
+        self.box2.pack_start(self.buttonMakeMove)
         
         #Testing image. Can be commented later
         #self.image2=gtk.image_new_from_pixbuf(self.pix_safesquare)
@@ -153,3 +159,80 @@ class GameScreen(gtk.Window):
         self.gamewindow.add(self.box1)
         self.gamewindow.show_all()
         self.gamewindow.connect("destroy",self.destroy)
+        
+        #Dialog boxes for alerts
+        self.dialog1 = gtk.MessageDialog(
+            parent         = None,
+            flags          = gtk.DIALOG_DESTROY_WITH_PARENT,
+            type           = gtk.MESSAGE_INFO,
+            buttons        = gtk.BUTTONS_OK,
+            message_format = "Thank you for playing")
+        self.dialog1.set_title('Game Over!')
+        self.dialog1.connect('response', lambda dialog1, response: self.dialog1.destroy())
+        
+        self.dialogRollDice = gtk.MessageDialog(
+            parent         = None,
+            flags          = gtk.DIALOG_DESTROY_WITH_PARENT,
+            type           = gtk.MESSAGE_INFO,
+            buttons        = gtk.BUTTONS_OK,
+            message_format = "Roll Dice First!")
+        self.dialogRollDice.set_title('Alert!')
+        self.dialogRollDice.connect('response', lambda dialogRollDice, response: self.dialogRollDice.destroy())
+
+        self.dialogMakeMove = gtk.MessageDialog(
+            parent         = None,
+            flags          = gtk.DIALOG_DESTROY_WITH_PARENT,
+            type           = gtk.MESSAGE_INFO,
+            buttons        = gtk.BUTTONS_OK,
+            message_format = "Make Move First!")
+        self.dialogMakeMove.set_title('Alert!')
+        self.dialogMakeMove.connect('response', lambda dialogMakeMove, response: self.dialogMakeMove.destroy())
+
+        
+    def rollDice(self,widget):
+        if (self.setDice == 1):
+            self.setDice = 0
+            self.gameBoard.setDiceValue()
+            self.labelDice.set_text(str(self.gameBoard.getDiceValue()))
+            self.statusTextBox.set_text("Turn of "+self.gameBoard.getCurrentPlayer().getPlayerName()+" Make move")
+        else:
+            self.dialogMakeMove.show()
+            
+        
+    def makeNextMove(self,widget):
+        if (self.setDice == 0):
+            self.setDice = 1
+            print "Chance of player: ", self.gameBoard.getCurrentPlayer().getPlayerName()
+            self.pawnChosen = self.gameBoard.choosePawnIntelligentVsRandom()
+            self.currentPlayer = self.gameBoard.getCurrentPlayer().getPlayerName()
+            if self.pawnChosen is None:
+                print "Player ", self.gameBoard.getCurrentPlayer().getPlayerName(), "does not have any pawns to move this turn"
+            else:
+                print "Player ", self.gameBoard.getCurrentPlayer().getPlayerName()," has chosen the pawn ", self.pawnChosen.printDetail()
+                self.currentPosition = self.pawnChosen.getPosition()
+                print "Current pawn position = ", self.currentPosition
+            print "dice value = ", self.gameBoard.getDiceValue()              
+            Tuple = self.gameBoard.movePawn(self.pawnChosen, self.gameBoard.getDiceValue())
+            if Tuple[0]!=-1:
+                print "Pawn ", Tuple[0], " is now at the position: ", Tuple[1].getPosition()
+            self.newPosition = Tuple[1].getPosition()
+            print "self.currentPlayer  ", self.currentPlayer  ,"self.playerA.getPlayerName()", self.playerA.getPlayerName()
+            if (self.currentPlayer == self.playerA.getPlayerName()):
+                    self.computerPlayerMove("blue", Tuple[0], self.currentPosition, self.newPosition)
+            else:
+                    self.computerPlayerMove("red", Tuple[0], self.currentPosition, self.newPosition)
+            self.statusTextBox.set_text("Turn of "+self.gameBoard.getCurrentPlayer().getPlayerName()+" Roll dice")
+            print "======================================================================\n"
+            print "State of the board \n"
+            print "======================================================================\n"
+            self.playerA.printValue()
+            print "=======================================================================\n"
+            self.playerB.printValue()
+            print "=======================================================================\n"
+            if self.gameBoard.hasTerminated() == True:
+                self.winner = self.gameBoard.getWinner()
+                print self.dialog1.show()
+        else:
+            self.dialogRollDice.show()
+            
+        

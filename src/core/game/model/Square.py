@@ -32,23 +32,18 @@ class Square(object):
     '''
         This function will return a set of tuples (PlayerName, NumberOfPawns of PlayerName) 
     '''
-    def getPlayersOnSquare(self, playerSet):
-        playerInformation = {}
+    def getPlayersOnSquare(self):
+        playerInformation = []
         for pawns in self.__pawnList:
             playerName = pawns.getName()[0]
-            if(playerName in playerSet):
-                playerInformation[playerName]+=1
-            else:    
-                playerSet.add(playerName)
-                playerInformation[playerName] = 1
+            playerInformation.append(playerName)
         return playerInformation
     
     def getPawnsOnSquareForAPlayer(self, player):
         pawnList = []
-        PlayerName = player.getPlayerName()
         for pawn in self.__pawnList:
             playerName = pawn.getName()[0]
-            if(playerName == PlayerName):
+            if(playerName == player):
                 pawnList.append(pawn)
         return pawnList
     
@@ -60,3 +55,13 @@ class Square(object):
     
     def isGoalSquare(self):
         return self.__isGoalSquare
+    
+    def addToPawnList(self, pawn):
+        self.__pawnList.append(pawn)
+    
+    def deleteFromPawnList(self, pawn):
+        self.__pawnList.remove(pawn)
+        
+    def addAllPawnsToList(self, listOfPawns):
+        for pawn in listOfPawns:
+            self.__pawnList.append(pawn)
